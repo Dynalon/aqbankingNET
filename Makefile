@@ -80,4 +80,5 @@ uninstall:
 
 clean: 
 	@rm -rf *.o *.c $(CS_OUTPUT_PATH)
-	@rm -rf *.so rm -rf *.dll *.tmp $(BUILD_OUTPUT_PATH)
+	@rm -rf *.so
+	@rm -rf *.dll *.tmp $(BUILD_OUTPUT_PATH)
