@@ -1,6 +1,6 @@
-DESTDIR=/usr/local/
+DESTDIR=/usr/
 # specify where is monos GAC
-GAC_ROOT=/usr/lib
+GAC_ROOT=$(DESTDIR)/lib
 # might be overriden to lib64 
 LIBDIR=lib/
 
@@ -68,7 +68,9 @@ build_wrapper:
 install:
 	### Copying $(WRAPPER_LIB) to $(DESTDIR)/$(LIBDIR)/
 	install -D $(BUILD_OUTPUT_PATH)/$(WRAPPER_LIB) $(DESTDIR)/$(LIBDIR)/$(WRAPPER_LIB)
-	### Installing $(CIL_DLL) to global assembly cache (GAC)	
+	# in rpm builds its likely $(DESTDIR)mono/gac does not exist, so create it
+	mkdir -p $(GAC_ROOT)/mono/gac/
+	### Installing $(CIL_DLL) to global assembly cache (GAC)
 	gacutil -package aqbankingNET -i $(BUILD_OUTPUT_PATH)/$(CIL_DLL) -root $(GAC_ROOT)
 
 uninstall:
