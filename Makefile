@@ -3,7 +3,7 @@ DESTDIR=/usr/
 GAC_ROOT=$(DESTDIR)/lib
 # might be overriden to lib64 
 LIBDIR=lib/
-PCDIR=/usr/lib/pkgconfig/
+PCDIR=$(DESTDIR)/$(LIBDIR)/pkgconfig/
 
 GWENHYWFAR_CFLAGS=$(shell pkg-config --cflags gwenhywfar)
 GWENHYWFAR_LDFLAGS=$(shell pkg-config --libs gwenhywfar)
@@ -11,9 +11,9 @@ AQBANKING_CFLAGS=$(shell pkg-config --cflags aqbanking)
 AQBANKING_LDFLAGS=$(shell pkg-config --libs aqbanking)
 # we HAVE to avoid dots in the .so because windows does not append .dll if 
 # there is already a dot in the name within the DllImport parameter
-AQBANKING_VERSION=$(subst .,-,$(shell pkg-config --modversion aqbanking))
-# get the MAJOR Version of aqbanking
-AQBANKING_MAJOR=$(shell echo -n $(AQBANKING_VERSION) | cut -f1 -d'-')
+AQBANKING_VERSION=$(shell pkg-config --modversion aqbanking)
+AQBANKING_MAJOR=$(shell echo -n $(AQBANKING_VERSION) | cut -f1 -d'.')
+
 NAMESPACE=AqBanking
 
 SWIG=$(shell which swig)
@@ -24,17 +24,19 @@ CC=$(shell which cc)
 SWIG_INTERFACE=aqbanking.i
 
 # name of target native wrapper library
-WRAPPER_NAME=aqbankingNET$(AQBANKING_MAJOR)-native
 # on linux mono expects the library to have a 'lib' prefix and .so suffix
-WRAPPER_LIB=lib$(WRAPPER_NAME).so
+WRAPPER_NAME=aqbankingNET-native
+WRAPPER_GENERIC_ALIAS=lib$(WRAPPER_NAME).so
+WRAPPER_MAJOR_ALIAS=$(WRAPPER_GENERIC_ALIAS).$(AQBANKING_MAJOR)
+WRAPPER_LIB=lib$(WRAPPER_NAME).so.$(AQBANKING_VERSION)
+
 CIL_NAME=aqbankingNET$(AQBANKING_MAJOR)
 CIL_DLL=$(CIL_NAME).dll
 BUILD_OUTPUT_PATH=bin/
 CS_OUTPUT_PATH=csharp-tmp/
 
-
 # Flags for compiling & linking into a shared .so
-CFLAGS=-Wno-deprecated-declarations -fPIC -shared -Wl,-soname,$(WRAPPER_LIB)
+CFLAGS=-Wno-deprecated-declarations -fPIC -shared -Wl,-soname,$(WRAPPER_MAJOR_ALIAS)
 
 all: checks gen_wrapper build_cswrapper build_wrapper 
 
@@ -69,16 +71,24 @@ build_wrapper:
 install:
 	### Copying $(WRAPPER_LIB) to $(DESTDIR)/$(LIBDIR)/
 	install -D $(BUILD_OUTPUT_PATH)/$(WRAPPER_LIB) $(DESTDIR)/$(LIBDIR)/$(WRAPPER_LIB)
+	rm -rf $(DESTDIR)/$(LIBDIR)/$(WRAPPER_MAJOR_ALIAS)
+	ln -s $(DESTDIR)/$(LIBDIR)/$(WRAPPER_LIB)  $(DESTDIR)/$(LIBDIR)/$(WRAPPER_MAJOR_ALIAS)
+	rm -rf $(DESTDIR)/$(LIBDIR)/$(WRAPPER_GENERIC_ALIAS)
+	ln -s $(DESTDIR)/$(LIBDIR)/$(WRAPPER_LIB)  $(DESTDIR)/$(LIBDIR)/$(WRAPPER_GENERIC_ALIAS)
+
 	# in rpm builds its likely $(DESTDIR)mono/gac does not exist, so create it
 	mkdir -p $(GAC_ROOT)/mono/gac/
 	### Installing $(CIL_DLL) to global assembly cache (GAC)
 	gacutil -package aqbankingNET -i $(BUILD_OUTPUT_PATH)/$(CIL_DLL) -root $(GAC_ROOT)
 	### Copying .pc to pkg-config directory at $(PCDIR)
+	mkdir -p $(PCDIR)
 	install -D aqbankingNET.pc $(PCDIR)
 
 uninstall:
 	### removing $(DESTDIR)/lib/$(WRAPPER_LIB)
 	rm -rf $(DESTDIR)/$(LIBDIR)/$(WRAPPER_LIB)
+	rm -rf $(DESTDIR)/$(LIBDIR)/$(WRAPPER_GENERIC_ALIAS)
+	rm -rf $(DESTDIR)/$(LIBDIR)/$(WRAPPER_MAJOR_ALIAS)
 	### Uninstalling $(CIL_NAME) from global assembly cache (GAC)	
 	gacutil -u $(CIL_NAME)
 	rm -rf $(GAC_ROOT)/mono/aqbankingNET/
