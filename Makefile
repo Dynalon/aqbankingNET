@@ -3,6 +3,7 @@ DESTDIR=/usr/
 GAC_ROOT=$(DESTDIR)/lib
 # might be overriden to lib64 
 LIBDIR=lib/
+PCDIR=/usr/lib/pkgconfig/
 
 GWENHYWFAR_CFLAGS=$(shell pkg-config --cflags gwenhywfar)
 GWENHYWFAR_LDFLAGS=$(shell pkg-config --libs gwenhywfar)
@@ -72,6 +73,8 @@ install:
 	mkdir -p $(GAC_ROOT)/mono/gac/
 	### Installing $(CIL_DLL) to global assembly cache (GAC)
 	gacutil -package aqbankingNET -i $(BUILD_OUTPUT_PATH)/$(CIL_DLL) -root $(GAC_ROOT)
+	### Copying .pc to pkg-config directory at $(PCDIR)
+	install -D aqbankingNET.pc $(PCDIR)
 
 uninstall:
 	### removing $(DESTDIR)/lib/$(WRAPPER_LIB)
