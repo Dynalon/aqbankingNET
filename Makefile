@@ -1,3 +1,5 @@
+# it is HIGHLY RECOMMENDED you leave DESTDIR to /usr, else you need LOTS of
+# adjustements in this Makefile to get it working
 DESTDIR=/usr/
 # specify where is monos GAC
 GAC_ROOT=$(DESTDIR)/lib
