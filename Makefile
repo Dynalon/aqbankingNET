@@ -1,11 +1,11 @@
 # it is HIGHLY RECOMMENDED you leave DESTDIR to /usr, else you need LOTS of
 # adjustements in this Makefile to get it working
-DESTDIR=/usr/
+DESTDIR=/usr
 # specify where is monos GAC
 GAC_ROOT=$(DESTDIR)/lib
 # might be overriden to lib64 
-LIBDIR=lib/
-PCDIR=$(DESTDIR)/$(LIBDIR)/pkgconfig/
+LIBDIR=lib
+PCDIR=$(DESTDIR)/$(LIBDIR)/pkgconfig
 
 GWENHYWFAR_CFLAGS=$(shell pkg-config --cflags gwenhywfar)
 GWENHYWFAR_LDFLAGS=$(shell pkg-config --libs gwenhywfar)
@@ -34,8 +34,8 @@ WRAPPER_LIB=lib$(WRAPPER_NAME).so.$(AQBANKING_VERSION)
 
 CIL_NAME=aqbankingNET$(AQBANKING_MAJOR)
 CIL_DLL=$(CIL_NAME).dll
-BUILD_OUTPUT_PATH=bin/
-CS_OUTPUT_PATH=csharp-tmp/
+BUILD_OUTPUT_PATH=bin
+CS_OUTPUT_PATH=csharp-tmp
 
 # Flags for compiling & linking into a shared .so
 CFLAGS=-Wno-deprecated-declarations -fPIC -shared -Wl,-soname,$(WRAPPER_MAJOR_ALIAS)
@@ -60,13 +60,13 @@ gen_wrapper:	$(SWIG_INTERFACE)
 build_cswrapper:
 	@mkdir -p $(BUILD_OUTPUT_PATH)
 	@# Compile the .cs files and sign with the mono (not so) private key
-	$(GMCS) -t:library -keyfile:mono.snk -out:$(BUILD_OUTPUT_PATH)$(CIL_DLL) $(CS_OUTPUT_PATH)/*.cs
+	$(GMCS) -t:library -keyfile:mono.snk -out:$(BUILD_OUTPUT_PATH)/$(CIL_DLL) $(CS_OUTPUT_PATH)/*.cs
 
 build_wrapper:
 	### Compiling the C wrapper libary: $(WRAPPER_LIB)
 	@# order is VERY important - some distros (like SUSE Buildservice) fail
 	@# if the external CFLAGS & LDFLAGS are placed before the .c file!
-	$(CC) $(CFLAGS) -o $(BUILD_OUTPUT_PATH)$(WRAPPER_LIB) aqbanking_wrap.c \
+	$(CC) $(CFLAGS) -o $(BUILD_OUTPUT_PATH)/$(WRAPPER_LIB) aqbanking_wrap.c \
 		$(GWENHYWFAR_CFLAGS) $(AQBANKING_CFLAGS) \
 		$(GWENHYWFAR_LDFLAGS) $(AQBANKING_LDFLAGS) 
 
